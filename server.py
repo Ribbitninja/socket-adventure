@@ -79,9 +79,12 @@ class Server(object):
         :return: str
         """
 
-        # TODO: YOUR CODE HERE
-
-        pass
+        return [
+            "You are in the room with the white wallpaper.",
+            "You are in the room with the green wallpaper.",
+            "You are in the room with the brown wallpaper.",
+            "You are in the room with the mauve wallpaper.",
+        ][room_number]
 
     def greet(self):
         """
@@ -98,108 +101,128 @@ class Server(object):
         )
 
     def get_input(self):
-        """
-        Retrieve input from the client_connection. All messages from the client
-        should end in a newline character: '\n'.
-        
-        This is a BLOCKING call. It should not return until there is some input from
-        the client to receive.
-         
-        :return: None 
-        """
+        def get_input(self):
+            """
+            Retrieve input from the client_connection. All messages from the client
+            should end in a newline character: '\n'.
 
-        # TODO: YOUR CODE HERE
+            This is a BLOCKING call. It should not return until there is some input from
+            the client to receive.
 
-        pass
+            :return: None
+            """
+
+            received = b''
+            while b'\n' not in received:
+                received += self.client_connection.recv(16)
+
+            self.input_buffer = received.decode().strip()
+
 
     def move(self, argument):
-        """
-        Moves the client from one room to another.
-        
-        Examines the argument, which should be one of:
-        
-        * "north"
-        * "south"
-        * "east"
-        * "west"
-        
-        "Moves" the client into a new room by adjusting self.room to reflect the
-        number of the room that the client has moved into.
-        
-        Puts the room description (see `self.room_description`) for the new room
-        into "self.output_buffer".
-        
-        :param argument: str
-        :return: None
-        """
+        def move(self, argument):
+            """
+            Moves the client from one room to another.
+            ...
 
-        # TODO: YOUR CODE HERE
+            :param argument: str
+            :return: None
+            """
 
-        pass
+            if self.room == 0 and argument == "north":
+                self.room = 3
+
+            if self.room == 0 and argument == "west":
+                self.room = 1
+
+            if self.room == 0 and argument == "east":
+                self.room = 2
+
+            if self.room == 1 and argument == "east":
+                self.room = 0
+
+            if self.room == 2 and argument == "west":
+                self.room = 0
+
+            if self.room == 3 and argument == "south":
+                self.room = 0
+
+            self.output_buffer = self.room_description(self.room)
 
     def say(self, argument):
         """
         Lets the client speak by putting their utterance into the output buffer.
-        
+
         For example:
         `self.say("Is there anybody here?")`
         would put
         `You say, "Is there anybody here?"`
         into the output buffer.
-        
+
         :param argument: str
         :return: None
         """
 
-        # TODO: YOUR CODE HERE
-
-        pass
+        self.output_buffer = 'You say, "{}"'.format(argument)
 
     def quit(self, argument):
-        """
-        Quits the client from the server.
-        
-        Turns `self.done` to True and puts "Goodbye!" onto the output buffer.
-        
-        Ignore the argument.
-        
-        :param argument: str
-        :return: None
-        """
+        def quit(self, argument):
+            """
+            Quits the client from the server.
 
-        # TODO: YOUR CODE HERE
+            Turns `self.done` to True and puts "Goodbye!" onto the output buffer.
 
-        pass
+            Ignore the argument.
+
+            :param argument: str
+            :return: None
+            """
+
+            self.done = True
+            self.output_buffer = "Goodbye!"
+
 
     def route(self):
-        """
-        Examines `self.input_buffer` to perform the correct action (move, quit, or
-        say) on behalf of the client.
-        
-        For example, if the input buffer contains "say Is anybody here?" then `route`
-        should invoke `self.say("Is anybody here?")`. If the input buffer contains
-        "move north", then `route` should invoke `self.move("north")`.
-        
-        :return: None
-        """
+        def route(self):
+            """
+            Examines `self.input_buffer` to perform the correct action (move, quit, or
+            say) on behalf of the client.
+            ...
 
-        # TODO: YOUR CODE HERE
+            :return: None
+            """
 
-        pass
+            received = self.input_buffer.split(" ")
+
+            command = received.pop(0)
+            arguments = " ".join(received)
+
+            # If `self.input_buffer` was "say Is anybody here?", then:
+            # `command` should now be "say" and `arguments` should now be "Is anybody here?".
+            #
+            # If `self.input_buffer` was "move north", then:
+            # `command` should now be "move" and `arguments` should now be "north".
+
+            {
+                'quit': self.quit,
+                'move': self.move,
+                'say': self.say,
+            }[command](arguments)
+
 
     def push_output(self):
-        """
-        Sends the contents of the output buffer to the client.
-        
-        This method should prepend "OK! " to the output and append "\n" before
-        sending it.
-        
-        :return: None 
-        """
+        def push_output(self):
+            """
+            Sends the contents of the output buffer to the client.
 
-        # TODO: YOUR CODE HERE
+            This method should prepend "OK! " to the output and append "\n" before
+            sending it.
 
-        pass
+            :return: None
+            """
+
+            self.client_connection.sendall(b"OK! " + self.output_buffer.encode() + b"\n")
+
 
     def serve(self):
         self.connect()
